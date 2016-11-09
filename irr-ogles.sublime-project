@@ -1,0 +1,22 @@
+{
+	"folders":
+	[
+		{
+			"folder_exclude_patterns":
+			[
+				"bin",
+				"doc",
+				"lib",
+				"media",
+				"scripts",
+				"source",
+				".git"
+			],
+			"path": "."
+		},
+		{
+			"path": "source\\Irrlicht",
+			"name": "irrlicht"
+		}
+	]
+}
