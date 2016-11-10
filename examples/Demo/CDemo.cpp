@@ -4,9 +4,9 @@
 #include "CDemo.h"
 #include "exampleHelper.h"
 
-CDemo::CDemo(bool f, bool m, bool s, bool a, bool v, bool fsaa, video::E_DRIVER_TYPE d)
+CDemo::CDemo(bool f, bool m, bool s, bool a, bool v, bool fsaa, video::E_DRIVER_TYPE d, android_app* p)
 : fullscreen(f), music(m), shadows(s), additive(a), vsync(v), aa(fsaa),
- driverType(d), device(0),
+ driverType(d), device(0), app(p),
 #ifdef USE_IRRKLANG
 	irrKlang(0), ballSound(0), impactSound(0),
 #endif
@@ -38,6 +38,7 @@ CDemo::~CDemo()
 
 void CDemo::run()
 {
+#ifndef _IRR_ANDROID_PLATFORM_
 	core::dimension2d<u32> resolution (800, 600);
 
 	if ( driverType == video::EDT_BURNINGSVIDEO || driverType == video::EDT_SOFTWARE )
@@ -45,11 +46,20 @@ void CDemo::run()
 		resolution.Width = 640;
 		resolution.Height = 480;
 	}
+#endif
 
-	irr::SIrrlichtCreationParameters params;
+	SIrrlichtCreationParameters params;
 	params.DriverType=driverType;
+#ifdef _IRR_ANDROID_PLATFORM_
+	params.WindowSize = core::dimension2d<u32>(0,0);	// using 0,0 it will automatically set it to the maximal size;
+	params.PrivateData = app;
+	params.Bits = 24;
+	params.ZBufferBits = 16;
+	params.AntiAlias  = 0;
+#else
 	params.WindowSize=resolution;
 	params.Bits=32;
+#endif
 	params.Fullscreen=fullscreen;
 	params.Stencilbuffer=shadows;
 	params.Vsync=vsync;
@@ -59,6 +69,8 @@ void CDemo::run()
 	device = createDeviceEx(params);
 	if (!device)
 		return;
+
+	device->getLogger()->log("IRR:device create ok...");
 
 	const io::path mediaPath = getExampleMediaPath();
 
@@ -74,6 +86,38 @@ void CDemo::run()
 	video::IVideoDriver* driver = device->getVideoDriver();
 	scene::ISceneManager* smgr = device->getSceneManager();
 	gui::IGUIEnvironment* guienv = device->getGUIEnvironment();
+
+#ifdef _IRR_ANDROID_PLATFORM_
+	io::IFileSystem * fs = device->getFileSystem();
+
+	/* Access to the Android native window. You often need this when accessing NDK functions like we are doing here.
+	   Note that windowWidth/windowHeight have already subtracted things like the taskbar which your device might have,
+	   so you get the real size of your render-window.
+	*/
+	ANativeWindow* nativeWindow = static_cast<ANativeWindow*>(driver->getExposedVideoData().OGLESAndroid.Window);
+	int32_t windowWidth = ANativeWindow_getWidth(app->window);
+	int32_t windowHeight = ANativeWindow_getHeight(app->window);
+	
+	/* Get display metrics. We are accessing the Java functions of the JVM directly in this case as there is no NDK function for that yet.
+	   Checkout android_tools.cpp if you want to know how that is done. */
+	irr::android::SDisplayMetrics displayMetrics;
+	memset(&displayMetrics, 0, sizeof displayMetrics);
+	irr::android::getDisplayMetrics(app, displayMetrics);
+
+
+	// The Android assets file-system does not know which sub-directories it has (blame google).
+	// So we have to add all sub-directories in assets manually. Otherwise we could still open the files, 
+	// but existFile checks will fail (which are for example needed by getFont).
+	for ( u32 i=0; i < fs->getFileArchiveCount(); ++i )
+	{
+		io::IFileArchive* archive = fs->getFileArchive(i);
+		if ( archive->getType() == io::EFAT_ANDROID_ASSET )
+		{
+			archive->addDirectoryToFileList(mediaPath);
+			break;
+		}
+	}
+#endif
 
 	device->setWindowCaption(L"Irrlicht Engine Demo");
 
@@ -569,7 +613,9 @@ void CDemo::createLoadingScreen()
 {
 	core::dimension2d<u32> size = device->getVideoDriver()->getScreenSize();
 
+#ifndef _IRR_ANDROID_PLATFORM_
 	device->getCursorControl()->setVisible(false);
+#endif
 
 	// setup loading screen
 

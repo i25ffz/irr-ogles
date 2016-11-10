@@ -30,13 +30,23 @@ using namespace irr;
 	# include <SDL/SDL_mixer.h>
 #endif
 
+#ifdef _IRR_ANDROID_PLATFORM_
+#include <android_native_app_glue.h>
+#include <android/window.h>
+#include "android_tools.h"
+#endif // end of _IRR_ANDROID_PLATFORM_
+
 const int CAMERA_COUNT = 7;
 
 class CDemo : public IEventReceiver
 {
 public:
 
-	CDemo(bool fullscreen, bool music, bool shadows, bool additive, bool vsync, bool aa, video::E_DRIVER_TYPE driver);
+	CDemo(bool fullscreen, bool music, bool shadows, bool additive, bool vsync, bool aa, video::E_DRIVER_TYPE driver
+#ifdef _IRR_ANDROID_PLATFORM_
+		, android_app* app
+#endif
+		);
 
 	~CDemo();
 
@@ -60,6 +70,9 @@ private:
 	bool aa;
 	video::E_DRIVER_TYPE driverType;
 	IrrlichtDevice *device;
+#ifdef _IRR_ANDROID_PLATFORM_
+	android_app* app;
+#endif
 
 #ifdef USE_IRRKLANG
 	void startIrrKlang();
