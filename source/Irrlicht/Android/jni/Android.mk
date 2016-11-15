@@ -6,7 +6,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := Irrlicht
 IRRLICHT_LIB_NAME := lib$(LOCAL_MODULE).a
 
-LOCAL_CFLAGS := -Wall -pipe -fno-exceptions -fno-rtti -fstrict-aliasing
+LOCAL_CFLAGS := -Wall -pipe -fno-exceptions -fno-rtti -fstrict-aliasing -DNO_IRR_USE_NON_SYSTEM_ZLIB_
 
 ifndef NDEBUG
 LOCAL_CFLAGS += -g -D_DEBUG
@@ -15,7 +15,7 @@ LOCAL_CFLAGS += -fexpensive-optimizations -O3
 endif
 
 LOCAL_C_INCLUDES := ../../../include
-LOCAL_C_INCLUDES += ../zlib ../jpeglib ../libpng
+LOCAL_C_INCLUDES += ../jpeglib ../libpng
 
 LOCAL_SRC_FILES := \
 					Android/CIrrDeviceAndroid.cpp \
@@ -326,9 +326,7 @@ LOCAL_SRC_FILES := \
 					libpng/pngwrite.c \
 					libpng/pngwtran.c \
 					libpng/pngwutil.c \
-					lzma/LzmaDec.c \
-zlib/adler32.c   zlib/crc32.c    zlib/gzclose.c  zlib/gzread.c   zlib/infback.c  zlib/inflate.c   zlib/trees.c    zlib/zutil.c\
-zlib/compress.c  zlib/deflate.c  zlib/gzlib.c    zlib/gzwrite.c  zlib/inffast.c  zlib/inftrees.c  zlib/uncompr.c
+					lzma/LzmaDec.c
 
 LOCAL_STATIC_LIBRARIES := android_native_app_glue
 
